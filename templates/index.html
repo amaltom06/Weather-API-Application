@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Weather App</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <style>
+        body {
+            background: url('https://source.unsplash.com/1600x900/?weather') no-repeat center center fixed;
+            background-size: cover;
+            font-family: Arial, sans-serif;
+            color: #fff;
+            padding: 20px;
+        }
+        .container {
+            background-color: rgba(0, 0, 0, 0.7);
+            border-radius: 10px;
+            padding: 20px;
+            max-width: 1200px;
+            margin: 0 auto;
+            color: #fff;
+        }
+        h1 {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .current-weather {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-bottom: 30px;
+        }
+        .current-weather img {
+            width: 100px;
+            height: 100px;
+        }
+        .hourly-forecast, .daily-forecast {
+            margin-bottom: 30px;
+        }
+        .forecast-cards, .daily-cards {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-between;
+        }
+        .forecast-card, .daily-card {
+            background-color: rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 15px;
+            flex: 1;
+            margin: 5px;
+            min-width: 180px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .forecast-card img, .daily-card img {
+            width: 50px;
+            height: 50px;
+        }
+        @media (max-width: 768px) {
+            .container {
+                padding: 10px;
+            }
+            .forecast-card,
+            .daily-card {
+                flex-direction: column;
+                text-align: center;
+            }
+            .forecast-card img,
+            .daily-card img {
+                margin: auto;
+            }
+        }
+    </style>
+    <script>
+        async function getWeather() {
+            const city = document.getElementById('city').value;
+            if (!city) {
+                alert("Please enter a city name.");
+                return;
+            }
+
+            try {
+                const response = await fetch(`/weather?city=${city}`);
+                const data = await response.json();
+
+                if (response.ok) {
+                    document.getElementById('currentWeather').innerHTML = `
+                        <div class="current-weather">
+                            <h2>${data.current.city}</h2>
+                            <h3>${data.current.temperature}°C</h3>
+                            <p>${data.current.weather}</p>
+                            <img src="${data.current.weather_icon}" alt="${data.current.weather}">
+                            <p>Feels like ${data.current.feels_like}°C. ${data.current.description}</p>
+                            <p>Wind: ${data.current.wind_speed} m/s</p>
+                            <p>Humidity: ${data.current.humidity}% | Pressure: ${data.current.pressure} hPa</p>
+                            <p>Visibility: ${data.current.visibility} km | Dew Point: ${data.current.dew_point.toFixed(1)}°C</p>
+                        </div>
+                    `;
+
+                    let hourlyForecastHtml = '<h2>Hourly Forecast</h2><div class="forecast-cards">';
+                    data.hourly.forEach(hour => {
+                        hourlyForecastHtml += `
+                            <div class="forecast-card">
+                                <div class="info">
+                                    <p>${hour.time}</p>
+                                    <p>${hour.temperature}°C</p>
+                                    <p>${hour.weather}</p>
+                                </div>
+                                <img src="${hour.weather_icon}" alt="${hour.weather}">
+                            </div>
+                        `;
+                    });
+                    hourlyForecastHtml += '</div>';
+                    document.getElementById('hourlyForecast').innerHTML = hourlyForecastHtml;
+
+                    let dailyForecastHtml = '<h2>8-day Forecast</h2><div class="daily-cards">';
+                    data.daily.forEach(day => {
+                        dailyForecastHtml += `
+                            <div class="daily-card">
+                                <div class="info">
+                                    <p>${day.date}</p>
+                                    <p>${day.weather}</p>
+                                    <p>Min: ${day.min_temp}°C | Max: ${day.max_temp}°C</p>
+                                </div>
+                                <img src="${day.weather_icon}" alt="${day.weather}">
+                            </div>
+                        `;
+                    });
+                    dailyForecastHtml += '</div>';
+                    document.getElementById('dailyForecast').innerHTML = dailyForecastHtml;
+                    
+                } else {
+                    document.getElementById('currentWeather').innerHTML = `<p>${data.error}</p>`;
+                }
+            } catch (error) {
+                document.getElementById('currentWeather').innerHTML = `<p>An error occurred</p>`;
+            }
+        }
+    </script>
+</head>
+<body>
+    <div class="container">
+        <h1>Weather App</h1>
+        <input type="text" id="city" class="form-control mb-3" placeholder="Enter city name">
+        <button onclick="getWeather()" class="btn btn-primary btn-block mb-3">Get Weather</button>
+        
+        <div id="currentWeather"></div>
+
+        <div id="hourlyForecast" class="hourly-forecast"></div>
+
+        <div id="dailyForecast" class="daily-forecast"></div>
+    </div>
+
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.16.0/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+</body>
+</html>
